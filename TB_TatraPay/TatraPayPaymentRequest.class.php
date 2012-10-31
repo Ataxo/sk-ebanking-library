@@ -1,6 +1,7 @@
 <?php
 /*
 	Copyright 2009 MONOGRAM Technologies
+	Copyright 2012 Ataxo Interactive a.s.
 
 	This file is part of MONOGRAM EBanking libraries
 
