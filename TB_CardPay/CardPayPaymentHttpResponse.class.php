@@ -21,7 +21,7 @@
 
 	class CardPayPaymentHttpResponse extends EPaymentDesSignedMessage implements IEPaymentHttpPaymentResponse {
 		public function __construct($fields = null) {
-			$this->readOnlyFields = array('SS', 'VS', 'AC','RES', 'SIGN');
+			$this->readOnlyFields = array('SS', 'VS', 'AC', 'CID', 'RES', 'SIGN');
 
                         if ($fields == null) {
                             $fields = $_GET;
@@ -29,6 +29,7 @@
 
 			$this->fields['VS'] = isset($fields['VS']) ? $fields['VS'] : null;
 			$this->fields['AC'] = isset($fields['AC']) ? $fields['AC'] : null;
+			$this->fields['CID'] = isset($fields['CID']) ? $fields['CID'] : null;
 			$this->fields['RES'] = isset($fields['RES']) ? $fields['RES'] : null;
 			$this->fields['SIGN'] = isset($fields['SIGN']) ? $fields['SIGN'] : null;
 		}
@@ -41,7 +42,7 @@
 		}
 
 		protected function getSignatureBase() {
-			return "{$this->VS}{$this->RES}{$this->AC}";
+			return "{$this->VS}{$this->RES}{$this->AC}{$this->CID}";
 		}
 
     protected $isVerified = false;
