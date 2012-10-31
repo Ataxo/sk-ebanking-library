@@ -29,14 +29,14 @@ class CardPayPaymentRequest extends EPaymentDesSignedMessage implements IEPaymen
 
     public function __construct() {
         $this->readOnlyFields = array('SIGN');
-        $this->requiredFields = array('MID', 'AMT', 'CURR', 'VS', 'CS', 'RURL', 'IPC', 'NAME');
-        $this->optionalFields = array('PT', 'RSMS', 'REM', 'DESC', 'AREDIR', 'LANG');
+        $this->requiredFields = array('MID', 'AMT', 'CURR', 'VS', 'RURL', 'IPC', 'NAME');
+        $this->optionalFields = array('PT', 'RSMS', 'REM', 'DESC', 'CS', 'AREDIR', 'TPAY', 'CID', 'LANG', 'TEM', 'TSMS');
 
         $this->PT = 'CardPay';
     }
 
-    protected function getSignatureBase() {
-        $sb = "{$this->MID}{$this->AMT}{$this->CURR}{$this->VS}{$this->CS}{$this->RURL}{$this->IPC}{$this->NAME}";
+    public function getSignatureBase() {
+        $sb = "{$this->MID}{$this->AMT}{$this->CURR}{$this->VS}{$this->CS}{$this->RURL}{$this->IPC}{$this->NAME}{$this->TPAY}{$this->CID}";
         return $sb;
     }
 
@@ -45,12 +45,14 @@ class CardPayPaymentRequest extends EPaymentDesSignedMessage implements IEPaymen
             if (!is_string($this->AMT))
                 $this->AMT = sprintf("%01.2F", $this->AMT);
 
-            if (!eregi('^[0-9a-z]{3,4}$', $this->MID)) throw new Exception('Merchant ID is in wrong format');
-            if (!ereg('^[0-9]+(\\.[0-9]+)?$', $this->AMT)) throw new Exception('Amount is in wrong format');
+            if (!preg_match('/^[0-9a-z]{3,4}$/i', $this->MID)) throw new Exception('Merchant ID is in wrong format');
+            if (!preg_match('/^[0-9]+(\\.[0-9]+)?$/i', $this->AMT)) throw new Exception('Amount is in wrong format');
             if (strlen($this->VS) > 10) throw new Exception('Variable Symbol is in wrong format');
-            if (!ereg('^[0-9]+$', $this->VS)) throw new Exception('Variable Symbol is in wrong format');
-            if (strlen($this->CS) > 4) throw new Exception('Constant Symbol is in wrong format');
-            if (!ereg('^[0-9]+$', $this->CS)) throw new Exception('Constant Symbol is in wrong format');
+            if (!preg_match('/^[0-9]+$/i', $this->VS)) throw new Exception('Variable Symbol is in wrong format');
+            if (!isempty($this->CS)){
+                if (strlen($this->CS) > 4) throw new Exception('Constant Symbol is in wrong format');
+                if (!preg_match('/^[0-9]+$/i', $this->CS)) throw new Exception('Constant Symbol is in wrong format');
+            }
             if (isempty($this->RURL)) throw new Exception('Return URL is in wrong format');
             $urlRestrictedChars = array('&', '?', ';', '=', '+', '%');
             foreach ($urlRestrictedChars as $char)
@@ -60,21 +62,19 @@ class CardPayPaymentRequest extends EPaymentDesSignedMessage implements IEPaymen
             if (!isempty($this->PT))
                 if ($this->PT != 'CardPay') throw new Exception('Payment Type parameter must be "CardPay"');
             if (!isempty($this->RSMS))
-                if (!ereg('^(0|\\+421)9[0-9]{2}( ?[0-9]{3}){2}$', $this->RSMS)) throw new Exception('Return SMS in wrong format.');
+                if (!preg_match('/^(0|\\+421)9[0-9]{2}( ?[0-9]{3}){2}$/i', $this->RSMS)) throw new Exception('Return SMS in wrong format.');
             if (!isempty($this->REM))
-                if (!eregi('^[0-9a-z_]+(\.[0-9a-z_]+)*@([12]?[0-9]{0,2}(\.[12]?[0-9]{0,2}){3}|([a-z][0-9a-z\-]*\.)+[a-z]{2,6})$', $this->REM)) throw new Exception('Return e-mail address in wrong format');
+                if (!preg_match('/^[0-9a-z_]+(\.[0-9a-z_]+)*@([12]?[0-9]{0,2}(\.[12]?[0-9]{0,2}){3}|([a-z][0-9a-z\-]*\.)+[a-z]{2,6})$/i', $this->REM)) throw new Exception('Return e-mail address in wrong format');
             if (!isempty($this->DESC))
                 if (strlen($this->DESC) > 20) throw new Exception('Description is too long');
             if (!isempty($this->LANG)) {
-                $validLanguages = array('SK', 'EN', 'DE', 'RU');
+                $validLanguages = array('sk', 'en', 'de', 'hu', 'cz', 'es', 'fr', 'it', 'pl');
                 if (!in_array($this->LANG, $validLanguages)) throw new Exception('Unknown language, known languages are: '.implode(',', $validLanguages));
             }
             return true;
 
         } catch (Exception $e) {
-            if (defined('DEBUG') && DEBUG) {
-                throw $e;
-            }
+            throw $e;
             return false;
         }
     }
@@ -88,9 +88,9 @@ class CardPayPaymentRequest extends EPaymentDesSignedMessage implements IEPaymen
         if (!isempty($this->PT)) {
             $url .= "?PT={$this->PT}";
             $url .= "&MID={$this->MID}";
-        } else {
+        } else 
             $url .= "?MID={$this->MID}";
-        }
+
         $url .= "&AMT={$this->AMT}";
         $url .= "&CURR={$this->CURR}";
         $url .= "&VS={$this->VS}";
@@ -98,6 +98,13 @@ class CardPayPaymentRequest extends EPaymentDesSignedMessage implements IEPaymen
         $url .= "&RURL=".urlencode($this->RURL);
         $url .= "&IPC={$this->IPC}";
         $url .= "&NAME={$this->NAME}";
+        
+        //subscribe for comfort pay
+        if (!isempty($this->TPAY))
+            $url .= "&TPAY=".$this->TPAY;
+        if (!isempty($this->CID))
+            $url .= "&CID=".$this->CID;
+        //subscribe required fields
         $url .= "&SIGN={$this->SIGN}";
 
         if (!isempty($this->RSMS))
@@ -109,7 +116,7 @@ class CardPayPaymentRequest extends EPaymentDesSignedMessage implements IEPaymen
         if (!isempty($this->AREDIR))
             $url .= "&AREDIR={$this->AREDIR}";
         if (!isempty($this->LANG))
-            $url .= "&LANG={$this->LANT}";
+            $url .= "&LANG={$this->LANG}";
 
         return $url;
     }
