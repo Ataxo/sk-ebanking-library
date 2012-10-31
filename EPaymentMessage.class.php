@@ -45,8 +45,9 @@ abstract class EPaymentMessage {
 
     protected function checkRequiredFields() {
         foreach ($this->requiredFields as $requiredField) {
-            if (!isset($this->fields[$requiredField]))
-                return false;
+            if (!key_exists($requiredField,$this->fields)){
+                throw new Exception('Required field \''.$requiredField.'\' was not fount in post data.');
+            }
         }
         return true;
     }
