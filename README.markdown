@@ -14,7 +14,7 @@ Copyright
 ---------
 (c) 2009 [MONOGRAM Technologies](http://www.monogram.sk)
 
-(c) 2012 Ondrej Podolinský for [Ataxo Interactive a.s.](http://www.ataxointeractive.com)
+(c) 2012-2013 Ondrej Podolinský for [Ataxo Interactive a.s.](http://www.ataxointeractive.com)
 
 MONOGRAM EBanking library is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
