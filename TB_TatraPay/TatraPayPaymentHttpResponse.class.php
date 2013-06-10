@@ -58,9 +58,9 @@
 				throw new Exception(__METHOD__.": Message was not verified yet.");
 
 			if ($this->RES == "FAIL")
-				return IEPaymentHttpPaymentResponse::RESPONSE_FAIL;
+                            return IEPaymentHttpPaymentResponse::RESPONSE_FAIL;
 			else if ($this->RES == "OK")
-				return IEPaymentHttpPaymentResponse::RESPONSE_SUCCESS;
+                            return IEPaymentHttpPaymentResponse::RESPONSE_SUCCESS;
 			else if ($this->RES == "TOUT")
 			  return IEPaymentHttpPaymentResponse::RESPONSE_TIMEOUT;
 			else
