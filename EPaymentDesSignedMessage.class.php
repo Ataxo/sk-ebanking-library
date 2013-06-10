@@ -20,20 +20,12 @@
 require_once dirname(__FILE__).'/EPaymentMessage.class.php';
 
 abstract class EPaymentDesSignedMessage extends EPaymentMessage {
-    public function computeSign($sharedSecret) {
+    public function computeSign($sharedSecret,$fake = null) {
         if (!$this->isValid)
             throw new Exception(__METHOD__.": Message was not validated.");
 
         try {
             $bytesHash = sha1($this->GetSignatureBase(), true);
-
-            // uprava pre PHP < 5.0
-            if (strlen($bytesHash) != 20) {
-                $bytes = "";
-                for ($i = 0; $i < strlen($bytesHash); $i+=2)
-                    $bytes .= chr(hexdec(substr($str, $i, 2)));
-                $bytesHash = $bytes;
-            }
 
             $des = mcrypt_module_open(MCRYPT_DES, "", MCRYPT_MODE_ECB, "");
 
