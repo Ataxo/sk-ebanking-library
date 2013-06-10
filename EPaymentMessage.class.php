@@ -45,7 +45,7 @@ abstract class EPaymentMessage {
 
     protected function checkRequiredFields() {
         foreach ($this->requiredFields as $requiredField) {
-            if (!key_exists($requiredField,$this->fields)){
+            if (!array_key_exists($requiredField,$this->fields)){
                 throw new Exception('Required field \''.$requiredField.'\' was not fount in post data.');
             }
         }
@@ -63,7 +63,7 @@ abstract class EPaymentMessage {
         }
     }
 
-    public abstract function computeSign($sharedSecret);
+    public abstract function computeSign($text, $secret);
     protected abstract function validateData();
     protected abstract function getSignatureBase();
 }
