@@ -22,7 +22,7 @@
 
 	class CardPayPaymentHttpResponse extends EPaymentDesSignedMessage implements IEPaymentHttpPaymentResponse {
 		public function __construct($fields = null) {
-			$this->readOnlyFields = array('SS', 'VS', 'AC', 'CID', 'RES', 'SIGN');
+			$this->readOnlyFields = array('SS', 'VS', 'AC', 'CID', 'RES', 'TRES', 'SIGN');
 
                         if ($fields == null) {
                             $fields = $_GET;
@@ -32,6 +32,7 @@
 			$this->fields['AC'] = isset($fields['AC']) ? $fields['AC'] : null;
 			$this->fields['CID'] = isset($fields['CID']) ? $fields['CID'] : null;
 			$this->fields['RES'] = isset($fields['RES']) ? $fields['RES'] : null;
+                        $this->fields['TRES'] = isset($fields['TRES']) ? $fields['TRES'] : null;
 			$this->fields['SIGN'] = isset($fields['SIGN']) ? $fields['SIGN'] : null;
 		}
 		
@@ -43,7 +44,10 @@
 		}
 
 		protected function getSignatureBase() {
-			return "{$this->VS}{$this->RES}{$this->AC}{$this->CID}";
+                    if(is_null($this->TRES))//return from comfortPay
+                        return "{$this->VS}{$this->RES}{$this->AC}{$this->CID}";
+                    else
+                        return "{$this->VS}{$this->TRES}{$this->AC}{$this->CID}";
 		}
 
     protected $isVerified = false;
@@ -56,14 +60,27 @@
 		}
 
 		public function GetPaymentResponse() {
-			if (!$this->isVerified)
-				throw new Exception(__METHOD__.": Message was not verified yet.");
+                    if (!$this->isVerified)
+                        throw new Exception(__METHOD__.": Message was not verified yet.");
 
-			if ($this->RES == "FAIL")
-				return IEPaymentHttpPaymentResponse::RESPONSE_FAIL;
-			else if ($this->RES == "OK")
-				return IEPaymentHttpPaymentResponse::RESPONSE_SUCCESS;
-			else
-				return null;
+                    if ($this->RES == "FAIL")
+                        return IEPaymentHttpPaymentResponse::RESPONSE_FAIL;
+                    else if ($this->RES == "OK")
+                        return IEPaymentHttpPaymentResponse::RESPONSE_SUCCESS;
+                    else if ($this->RES == "TOUT")
+                        return IEPaymentHttpPaymentResponse::RESPONSE_TIMEOUT;
+                    else
+                        return null;
 		}
+                public function GetPeriodicPaymentResponse(){
+                    if (!$this->isVerified)
+                            throw new Exception(__METHOD__.": Message was not verified yet.");
+
+                    if ($this->TRES == "FAIL")
+                        return IEPaymentHttpPaymentResponse::RESPONSE_FAIL;
+                    else if ($this->TRES == "OK")
+                        return IEPaymentHttpPaymentResponse::RESPONSE_SUCCESS;
+                    else
+                        return null;
+                }
 	}
